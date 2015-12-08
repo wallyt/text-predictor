@@ -1,0 +1,24 @@
+---
+title: "Corpus Exploration"
+author: "Wally Thornton"
+date: "December 8, 2015"
+output: html_document
+---
+## Executive Summary
+
+```{r setup, include=F}
+knitr::opts_chunk$set(fig.width=7, fig.align='center')
+options(scipen=999)
+ensurePkg <- function(x) {
+    if (!require(x,character.only = TRUE)) {
+        install.packages(x,dep=TRUE, repos="http://cran.r-project.org")
+        if(!require(x,character.only = TRUE)) stop("Package not found")
+    }
+}
+help.search(keyword = "character", package = "base")
+ensurePkg("tm")
+ensurePkg("dplyr")
+ensurePkg("ggplot2")
+ensurePkg("scales")
+```
+
