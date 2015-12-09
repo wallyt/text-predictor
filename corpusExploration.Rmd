@@ -22,3 +22,36 @@ ensurePkg("ggplot2")
 ensurePkg("scales")
 ```
 
+## Exploratory Data Analysis
+
+```{r data, message=F, warning=F}
+#USnews <- VCorpus(DirSource("corpus/final/en_US", encoding = "UTF-8"))
+USnews <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE)
+USblogs <- readLines("corpus/final/en_US/en_US.blogs.txt", skipNul = TRUE)
+UStweets <- readLines("corpus/final/en_US/en_US.twitter.txt", skipNul = TRUE)
+```
+
+The US corpus consists of `r comma(length(USnews))` lines of news excerpts, `r comma(length(USblogs))` lines from blogs and `r comma(length(UStweets))` tweets.
+
+Next, we look at the type of text in each source, starting with news and picking five at random:
+```{r echo=F, message=F, warning=F}
+set.seed(42)
+USnews[sample(1:length(USnews),5)]
+```
+
+```{r echo=F, message=F, warning=F}
+set.seed(42)
+USblogs[sample(1:length(USblogs),5)]
+```
+
+```{r echo=F, message=F, warning=F}
+set.seed(42)
+UStweets[sample(1:length(UStweets),5)]
+```
+
+Preprocess
+Associate
+Cluster
+Summarize
+Categorize
+API
