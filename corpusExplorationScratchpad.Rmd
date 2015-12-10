@@ -1,0 +1,36 @@
+---
+title: "Corpus Exploration Scratchpad"
+author: "Wally Thornton"
+date: "December 10, 2015"
+output: html_document
+---
+
+```{r termFrequency}
+# https://deltadna.com/blog/text-mining-in-r-for-term-frequency/
+# To get just the good words, first collapse everything
+newsText <- paste(USnewsExcerpt, collapse = " ")
+# Then set up the source and create a corpus
+excerptSource <- VectorSource(newsText)
+excerptCorpus <- Corpus(excerptSource)
+# Then lowercase everything and get rid of common English words
+excerptCorpus <- tm_map(excerptCorpus, content_transformer(tolower))
+excerptCorpus <- tm_map(excerptCorpus, removePunctuation)
+excerptCorpus <- tm_map(excerptCorpus, stripWhitespace)
+excerptCorpus <- tm_map(excerptCorpus, removeWords, stopwords("english"))
+
+# Now we create the document-term matrix
+dtm <- DocumentTermMatrix(excerptCorpus)
+# Convert to a normal matrix from the sparse matrix
+dtm2 <- as.matrix(dtm)
+# Column sums of the matrix to get a named vector
+frequency <- colSums(dtm2)
+frequency <- sort(frequency, decreasing=TRUE)
+
+# Plot a word cloud with top 100
+words <- names(frequency)
+wordcloud(words[1:100], frequency[1:100])
+
+# Find associations of words occurring at least 200 times
+dtmHighFreq <- findFreqTerms(dtm, 200, Inf)
+findAssocs(dtm, "another", 0.85)
+```

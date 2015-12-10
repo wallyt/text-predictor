@@ -15,20 +15,24 @@ ensurePkg <- function(x) {
         if(!require(x,character.only = TRUE)) stop("Package not found")
     }
 }
-help.search(keyword = "character", package = "base")
+
 ensurePkg("tm")
 ensurePkg("dplyr")
 ensurePkg("ggplot2")
 ensurePkg("scales")
+ensurePkg("wordcloud")
+help.search(keyword = "character", package = "base")
 ```
 
 ## Exploratory Data Analysis
 
 ```{r data, message=F, warning=F}
-#USnews <- VCorpus(DirSource("corpus/final/en_US", encoding = "UTF-8"))
+USnewsExcerpt <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE, n=10000)
 USnews <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE)
 USblogs <- readLines("corpus/final/en_US/en_US.blogs.txt", skipNul = TRUE)
 UStweets <- readLines("corpus/final/en_US/en_US.twitter.txt", skipNul = TRUE)
+corpus <- Corpus(DirSource("corpus/final/en_US"))
+head(corpus[[1]]$content)
 ```
 
 The US corpus consists of `r comma(length(USnews))` lines of news excerpts, `r comma(length(USblogs))` lines from blogs and `r comma(length(UStweets))` tweets.
@@ -37,17 +41,41 @@ Next, we look at the type of text in each source, starting with news and picking
 ```{r echo=F, message=F, warning=F}
 set.seed(42)
 USnews[sample(1:length(USnews),5)]
+min(nchar(USnews))
+max(nchar(USnews))
+mean(nchar(USnews))
+summary(nchar(USnews))
 ```
+
+
 
 ```{r echo=F, message=F, warning=F}
 set.seed(42)
 USblogs[sample(1:length(USblogs),5)]
+min(nchar(USblogs))
+max(nchar(USblogs))
+mean(nchar(USblogs))
+summary(nchar(USblogs))
 ```
 
 ```{r echo=F, message=F, warning=F}
 set.seed(42)
 UStweets[sample(1:length(UStweets),5)]
+min(nchar(UStweets))
+max(nchar(UStweets))
+mean(nchar(UStweets))
+summary(nchar(UStweets))
 ```
+
+
+Boxplot, comparing them?
+
+
+
+http://www.r-bloggers.com/text-mining-in-r-automatic-categorization-of-wikipedia-articles/
+
+
+
 
 Preprocess
 Associate
