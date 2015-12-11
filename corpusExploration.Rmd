@@ -1,7 +1,7 @@
 ---
 title: "Corpus Exploration"
 author: "Wally Thornton"
-date: "December 8, 2015"
+date: "December 15, 2015"
 output: html_document
 ---
 ## Executive Summary
@@ -27,12 +27,13 @@ help.search(keyword = "character", package = "base")
 ## Exploratory Data Analysis
 
 ```{r data, message=F, warning=F}
-USnewsExcerpt <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE, n=10000)
+#USnewsExcerpt <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE, n=10000)
 USnews <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE)
 USblogs <- readLines("corpus/final/en_US/en_US.blogs.txt", skipNul = TRUE)
 UStweets <- readLines("corpus/final/en_US/en_US.twitter.txt", skipNul = TRUE)
 corpus <- Corpus(DirSource("corpus/final/en_US"))
-head(corpus[[1]]$content)
+#head(corpus[[1]]$content)
+#length(content(corpus[[1]]))
 ```
 
 The US corpus consists of `r comma(length(USnews))` lines of news excerpts, `r comma(length(USblogs))` lines from blogs and `r comma(length(UStweets))` tweets.
@@ -41,40 +42,104 @@ Next, we look at the type of text in each source, starting with news and picking
 ```{r echo=F, message=F, warning=F}
 set.seed(42)
 USnews[sample(1:length(USnews),5)]
-min(nchar(USnews))
-max(nchar(USnews))
-mean(nchar(USnews))
-summary(nchar(USnews))
+newsMin <- min(nchar(USnews))
+newsMax <- max(nchar(USnews))
+newsMean <- mean(nchar(USnews))
+newsSum <- summary(nchar(USnews))
 ```
 
-
+We see in these five examples that the news items are typically full sentences, although not exclusively. Items vary from sports reports to local news to entertainment. Accordingly, there are many proper nouns ('Chicago', 'Coolio'), numbers ('9-9 with a 3.75', '1995'), topic-specific items ('ERA') and even email addresses that will not be useful in our predictive text app. On the plus side, they tend to adhere to standard grammatical rules and will therefore be easier to parse.
 
 ```{r echo=F, message=F, warning=F}
-set.seed(42)
+set.seed(420)
 USblogs[sample(1:length(USblogs),5)]
-min(nchar(USblogs))
-max(nchar(USblogs))
-mean(nchar(USblogs))
-summary(nchar(USblogs))
+blogsMin <- min(nchar(USblogs))
+blogsMax <- max(nchar(USblogs))
+blogsMean <- mean(nchar(USblogs))
+blogsSum <- summary(nchar(USblogs))
 ```
+
+The five blog examples are much less structured than the news items, with grammatical errors, misspellings and incomplete sentences. Topics are all over the place and there's a lack of comment delineators. Punctuation is also much more liberally used ('\*hug!!!!!!\*').
 
 ```{r echo=F, message=F, warning=F}
 set.seed(42)
 UStweets[sample(1:length(UStweets),5)]
-min(nchar(UStweets))
-max(nchar(UStweets))
-mean(nchar(UStweets))
-summary(nchar(UStweets))
+tweetsMin <- min(nchar(UStweets))
+tweetsMax <- max(nchar(UStweets))
+tweetsMean <- mean(nchar(UStweets))
+tweetsSum <- summary(nchar(UStweets))
 ```
 
+If the news items are the most structured and parseable, and blog excerpts are slightly less so, the tweets reside at the opposite end of the spectrum with incomplete sentences, grammatical errors, misspellings (intentional and otherwise), abbreviations, and inscrutable references. Punctuation is used liberally, but not to standard, complicating the relationships between terms.
 
-Boxplot, comparing them?
+## Preprocessing
+Given the unprocessed condition of the data, we first do some general cleaning that won't affect any relationships between the words, including converting to lowercase, removing punctuation and numbers, and stripping extra spaces. We'll also take this opportunity to remove profanity. We don't want to remove any common words (e.g., "and") at this point because they'll be needed as both inputs and outputs of the predictive model.
+```{r preprocess echo=F, message=F, warning=F}
+# From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
+
+ensurePkg("doParallel")
+corecount <- detectCores()
+cl <- makeCluster(corecount * 0.75)
+registerDoParallel(cl)
+getDoParWorkers()
+corpus <- corpus %>% tm_map(content_transformer(tolower)) %>% 
+                    tm_map(removePunctuation) %>% 
+                    tm_map(removeNumbers) %>% 
+                    tm_map(stripWhitespace)
+
+
+                    tm_map(removeWords, as.matrix(cursDict))
+
+dtm <- DocumentTermMatrix(corpus, control = list(minWordLength = 1))
+stopCluster(cl)
+
+# Word count per document
+rowSums(as.matrix(dtm))
 
 
 
-http://www.r-bloggers.com/text-mining-in-r-automatic-categorization-of-wikipedia-articles/
+# Try different method
+# https://github.com/kbenoit/quanteda
+ensurePkg('quanteda')
+newCorpus <- corpus(c(USnews, USblogs, UStweets))
+dfm <- dfm(newCorpus, stopwords=TRUE)
+topfeatures(mydfm, 20)  # 20 top words
+quartz()
+plot(mydfm) # word cloud
+```
 
+Word count comparison
 
+Boxplot comparing line lengths
+
+Frequency comparison
+
+Frequency combined
+
+Word pair frequencies
+
+```{r wordcloud message=F, warning=F}
+# For the wordcloud, we'll remove the common words
+corpusCloud <- tm_map(corpus, removeWords, stopwords)
+dtmCloud <- DocumentTermMatrix(corpusCloud)
+# Convert to a normal matrix from the sparse matrix
+dtmCloud2 <- as.matrix(dtmCloud)
+# Column sums of the matrix to get a named vector
+frequency <- colSums(dtmCloud2)
+frequency <- sort(frequency, decreasing=TRUE)
+
+# Plot a word cloud with top 100
+words <- names(frequency)
+wordcloud(words[1:100], frequency[1:100])
+
+# Find associations of words occurring at least 200 times
+dtmCloudHighFreq <- findFreqTerms(dtmCloud, 200, Inf)
+findAssocs(dtmCloud, "love", 0.85)
+```
+
+## Plan
+I don't want to stem because I want to predict the appropriate derivative of a word, which depends on the preceding words, although one option is to use stemDocument and then stemComplete (using dictCorpus<-myCorpus; dictionary=dictCorpus) to make them readable.
 
 
 Preprocess
@@ -82,4 +147,5 @@ Associate
 Cluster
 Summarize
 Categorize
+http://www.r-bloggers.com/text-mining-in-r-automatic-categorization-of-wikipedia-articles/
 API
