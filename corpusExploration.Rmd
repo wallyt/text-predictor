@@ -88,8 +88,7 @@ corpus <- corpus %>% tm_map(content_transformer(tolower)) %>%
                     tm_map(removeNumbers) %>% 
                     tm_map(stripWhitespace)
 
-
-                    tm_map(removeWords, as.matrix(cursDict))
+corpus <- tm_map(corpus, removeWords, as.matrix(cursDict))
 
 dtm <- DocumentTermMatrix(corpus, control = list(minWordLength = 1))
 stopCluster(cl)
