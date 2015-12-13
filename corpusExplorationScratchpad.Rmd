@@ -34,3 +34,13 @@ wordcloud(words[1:100], frequency[1:100])
 dtmHighFreq <- findFreqTerms(dtm, 200, Inf)
 findAssocs(dtm, "another", 0.85)
 ```
+
+
+# Try different method
+# https://github.com/kbenoit/quanteda
+ensurePkg('quanteda')
+newCorpus <- corpus(c(USnews, USblogs, UStweets))
+dfm <- dfm(newCorpus, stopwords=TRUE)
+topfeatures(mydfm, 20)  # 20 top words
+quartz()
+plot(mydfm) # word cloud
