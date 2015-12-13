@@ -78,6 +78,9 @@ Given the unprocessed condition of the data, we first do some general cleaning t
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
 curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
 
+# DigitalOcean droplet can't handle multiple cores for some reason
+coreLim <- ifelse(grepl("linux", R.version$platform), ", mc.cores=1", "")
+
 ensurePkg("doParallel")
 corecount <- detectCores()
 cl <- makeCluster(corecount * 0.75)
@@ -88,6 +91,7 @@ corpus <- tm_map(corpus, removePunctuation)
 corpus <- tm_map(corpus, removeNumbers)
 corpus <- tm_map(corpus, stripWhitespace)
 corpus <- tm_map(corpus, removeWords, as.matrix(curseDict))
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
 
 dtm <- DocumentTermMatrix(corpus, control = list(minWordLength = 1))
 stopCluster(cl)
