@@ -22,7 +22,7 @@ ensurePkg("ggplot2")
 ensurePkg("scales")
 ensurePkg("wordcloud")
 ensurePkg("stringi")
-help.search(keyword = "character", package = "base")
+# help.search(keyword = "character", package = "base")
 ```
 
 ## Exploratory Data Analysis
@@ -53,17 +53,17 @@ Blogs | `r comma(round(blogsSum[1], 1))` | `r comma(round(blogsSum[3], 1))` | `r
 Tweets | `r comma(round(tweetsSum[1], 1))` | `r comma(round(tweetsSum[3], 1))` | `r comma(round(tweetsSum[4], 1))` | `r comma(round(tweetsSum[6], 1))`
 
 Not surprisingly, the length of the blog and news items are much longer than the tweets (two to three times as long, on average) and the longest tweets are only 140 characters, versus the tens of thousands of characters in the longest blog and news excerpts. This is evident in the boxplots below, which show how much more varied blogs and news item lengths are than tweets. Note that the blog lines have much greater variance in length than even news items. (Given the huge range of line lengths, this plot is of the log of the lengths to visualize the spread.)
-```{r charBox echo=F, message=F, warning=F}
+```{r charBox, echo=F, message=F, warning=F}
 a <- data.frame(Source = "News", Length = log(newsChars))
 b <- data.frame(Source = "Blogs", Length = log(blogsChars))
 c <- data.frame(Source = "Tweets", Length = log(tweetsChars))
 plot.data <- rbind(a, b, c)
-g <- ggplot(plot.data, aes(x = Source, y = value, fill = Source))
+g <- ggplot(plot.data, aes(x = Source, y = Length, fill = Source))
 g + geom_boxplot()
 ```
 
 Now let's look at the word counts per line per text source, using the raw, un-processed data:
-```{r wordCountsPre, message=F, warning=F}
+```{r wordCountsPre, echo=F, message=F, warning=F}
 newsWordsPre <- stri_count(USnews, regex="\\S+")
 blogsWordsPre <- stri_count(USblogs, regex="\\S+")
 tweetsWordsPre <- stri_count(UStweets, regex="\\S+")
@@ -80,7 +80,7 @@ COMMENTARY
 
 Before turning our attention to processing the texts, we first get a sense of the data itself. How clean is the text? How many extraneous words, numbers, emoji and punctuation marks will we have to take care of? Starting with news and picking five at random:
 
-```{r newsSample echo=F, message=F, warning=F}
+```{r newsSample, echo=F, message=F, warning=F}
 set.seed(42)
 USnews[sample(1:length(USnews),5)]
 ```
