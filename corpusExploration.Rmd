@@ -26,19 +26,14 @@ ensurePkg("ggplot2")
 ensurePkg("scales")
 ensurePkg("wordcloud")
 ensurePkg("stringi")
-# help.search(keyword = "character", package = "base")
 ```
 
 ## Exploratory Data Analysis
-
 ```{r dataLoad, echo=F, message=F, warning=F}
 #USnewsExcerpt <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE, n=10000)
 USnews <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE)
 USblogs <- readLines("corpus/final/en_US/en_US.blogs.txt", skipNul = TRUE)
 UStweets <- readLines("corpus/final/en_US/en_US.twitter.txt", skipNul = TRUE)
-corpus <- Corpus(DirSource("corpus/final/en_US"))
-#head(corpus[[1]]$content)
-#length(content(corpus[[1]]))
 
 newsChars <- nchar(USnews)
 blogsChars <- nchar(USblogs)
@@ -47,7 +42,7 @@ newsSum <- summary(newsChars)
 blogsSum <- summary(blogsChars)
 tweetsSum <- summary(tweetsChars)
 ```
-
+#### Characters
 The US corpus consists of `r comma(length(USnews))` lines of news excerpts, `r comma(length(USblogs))` lines from blogs and `r comma(length(UStweets))` tweets. Let's break these lines down to the characters themselves and compare the text sources. Examining the news, blog and tweet excerpts line by line, we get a sense for their lengths by counting the characters: 
 
 Source | Min   | Median | Mean   | Max
@@ -56,62 +51,84 @@ News | `r comma(round(newsSum[1], 1))` | `r comma(round(newsSum[3], 1))` | `r co
 Blogs | `r comma(round(blogsSum[1], 1))` | `r comma(round(blogsSum[3], 1))` | `r comma(round(blogsSum[4], 1))` | `r comma(round(blogsSum[6], 1))`
 Tweets | `r comma(round(tweetsSum[1], 1))` | `r comma(round(tweetsSum[3], 1))` | `r comma(round(tweetsSum[4], 1))` | `r comma(round(tweetsSum[6], 1))`
 
-Not surprisingly, the length of the blog and news items are much longer than the tweets (two to three times as long, on average) and the longest tweets are only 140 characters, versus the tens of thousands of characters in the longest blog and news excerpts. This is evident in the boxplots below, which show how much more varied blogs and news item lengths are than tweets. Note that the blog lines have much greater variance in length than even news items. (Given the huge range of line lengths, this plot is of the log of the lengths to visualize the spread.)
-```{r charBox, echo=F, message=F, warning=F}
+Not surprisingly, the length of the blog and news items are much longer than the tweets (two to three times as long, on average) and the longest tweets are only 140 characters, versus the tens of thousands of characters in the longest blog and news excerpts. This is evident in the violin plot below, which shows the log of the lengths of the sources on the y-axis and the distribution of the lengths illustrated by their shapes. (Given the huge range of line lengths, this plot is of the log of the lengths to help in visualizing the spreads.) 
+
+```{r charViolin, echo=F, message=F, warning=F}
 a <- data.frame(Source = "News", Length = log(newsChars))
 b <- data.frame(Source = "Blogs", Length = log(blogsChars))
 c <- data.frame(Source = "Tweets", Length = log(tweetsChars))
 plot.data <- rbind(a, b, c)
 g <- ggplot(plot.data, aes(x = Source, y = Length, fill = Source))
-g + geom_boxplot()
+g + geom_violin()
 ```
 
+Note how much more varied blogs and news item lengths are than tweet lengths, which cluster close to their maximum of 140. Also, the blog lines have much greater variance in length than news items.
+
+#### Words
 Now let's look at the word counts per line per text source:
 ```{r wordCountsPre, echo=F, message=F, warning=F}
 newsWordsPre <- stri_count(USnews, regex="\\S+")
 blogsWordsPre <- stri_count(USblogs, regex="\\S+")
 tweetsWordsPre <- stri_count(UStweets, regex="\\S+")
+newsWordsSum <- summary(newsWordsPre)
+blogsWordsSum <- summary(blogsWordsPre)
+tweetsWordsSum <- summary(tweetsWordsPre)
 ```
 
 Source | Min   | Median | Mean   | Max
 ------ |----- | ------ | ------ | -----
-News | `r comma(round(newsWordsPre[1], 1))` | `r comma(round(newsWordsPre[3], 1))` | `r comma(round(newsWordsPre[4], 1))` | `r comma(round(newsWordsPre[6], 1))`
-Blogs | `r comma(round(blogsWordsPre[1], 1))` | `r comma(round(blogsWordsPre[3], 1))` | `r comma(round(blogsWordsPre[4], 1))` | `r comma(round(blogsWordsPre[6], 1))`
-Tweets | `r comma(round(tweetsWordsPre[1], 1))` | `r comma(round(tweetsWordsPre[3], 1))` | `r comma(round(tweetsWordsPre[4], 1))` | `r comma(round(tweetsWordsPre[6], 1))`
+News | `r comma(round(newsWordsSum[1], 1))` | `r comma(round(newsWordsSum[3], 1))` | `r comma(round(newsWordsSum[4], 1))` | `r comma(round(newsWordsSum[6], 1))`
+Blogs | `r comma(round(blogsWordsSum[1], 1))` | `r comma(round(blogsWordsSum[3], 1))` | `r comma(round(blogsWordsSum[4], 1))` | `r comma(round(blogsWordsSum[6], 1))`
+Tweets | `r comma(round(tweetsWordsSum[1], 1))` | `r comma(round(tweetsWordsSum[3], 1))` | `r comma(round(tweetsWordsSum[4], 1))` | `r comma(round(tweetsWordsSum[6], 1))`
 
-COMMENTARY
+These words counts will be different after processing the data (e.g., removing profanities), but the counts above help us see again how much longer the news items are than tweets, and how blog excerpts are even longer. (Interesting trivia: the tweet with the most words in the corpus is the word 'hi' repeated 47 times. Not very useful for our analysis, but perhaps indicative of the overall usefulness of tweets for training a model.)
 
+The histogram below shows the distribution of word counts between the three sources. (The plot is truncated at a count of 100 to help compare word count distributions since the word counts are clustered at the lower end of the scale.)
 
-Before turning our attention to processing the texts, we first get a sense of the data itself. How clean is the text? How many extraneous words, numbers, emoji and punctuation marks will we have to take care of? Starting with news and picking five at random:
+```{r wordHist, echo=F, message=F, warning=F}
+a <- data.frame(Source = "News", Count = newsWordsPre)
+b <- data.frame(Source = "Blogs", Count = blogsWordsPre)
+c <- data.frame(Source = "Tweets", Count = tweetsWordsPre)
+plot.data <- rbind(a, b, c)
+plot.data <- filter(plot.data, Count < 100)
+g <- ggplot(plot.data, aes(Count, fill = Source))
+g + geom_histogram(data = subset(plot.data, Source == "Tweets"), alpha = 0.3, binwidth = 1) +
+    geom_histogram(data = subset(plot.data, Source == "Blogs"), alpha = 0.3, binwidth = 1) + 
+    geom_histogram(data = subset(plot.data, Source == "News"), alpha = 0.3, binwidth = 1)
+```
+
+As in the comparison of characters, the number of words per tweet is on average much lower than in news and blogs, with the vast majority of tweets consisting of fewer than 25 words. The number of words per blog and news item is much more varied, with both having a long tail of excerpts with hundreds, even thousands of words, as seen in the table above.
+
+#### Textual Analysis
+Next we want to get a sense of the data itself. How clean is the text? How many extraneous words, numbers, emoji and punctuation marks will we have to take care of? Starting with news and picking five at random:
 
 ```{r newsSample, echo=F, message=F, warning=F}
 set.seed(42)
-USnews[sample(1:length(USnews),5)]
+USnews[sample(length(USnews),5)]
 ```
 
-We see in these five examples that the news items are typically full sentences, although not exclusively. Items vary from sports reports to local news to entertainment. Accordingly, there are many proper nouns ('Chicago', 'Coolio'), numbers ('9-9 with a 3.75', '1995'), topic-specific items ('ERA') and even email addresses that will not be useful in our predictive text app. On the plus side, they tend to adhere to standard grammatical rules and will therefore be easier to parse.
+We see in these five examples that the news items are typically full sentences, although not exclusively. Items vary from sports reports to local news to entertainment. Accordingly, there are many proper nouns ('Chicago', 'Coolio'), numbers ('9-9 with a 3.75', '1995'), topic-specific items ('ERA') and even email addresses that will not be useful in our predictive text app. On the plus side, the text tends to adhere to standard grammatical rules and will therefore be relatively easy to parse.
 
 ```{r blogsSample, echo=F, message=F, warning=F}
 set.seed(420)
-USblogs[sample(1:length(USblogs),5)]
+USblogs[sample(length(USblogs),5)]
 ```
 
-The five blog examples are much less structured than the news items, with grammatical errors, misspellings and incomplete sentences. Topics are all over the place and there is a lack of comment delineators. Punctuation is also much more liberally used (e.g., '\*hug!!!!!!\*').
+The five blog examples are much less structured than the news items, with grammatical errors, misspellings and incomplete sentences. Topics are all over the place and there is a lack of comment delineators. Punctuation is also much more liberally used ('\*hug!!!!!!\*').
 
 ```{r tweetsSample, echo=F, message=F, warning=F}
 set.seed(42)
-UStweets[sample(1:length(UStweets),5)]
+UStweets[sample(length(UStweets),5)]
 ```
 
 If the news items are the most structured and parseable and blog excerpts slightly less so, the tweets reside at the opposite end of the spectrum with incomplete sentences, grammatical errors, misspellings (intentional and otherwise), abbreviations, and inscrutable references. Punctuation is used liberally, but not to standard, complicating the relationships between terms.
 
-## Preprocessing
-Given the clutter described above, we first do some general cleaning before analyzing further. We don't want to affect any relationships between the words, so we focus on converting to lowercase, removing punctuation and numbers, and stripping extra spaces. We'll also take this opportunity to remove profanity.
-
-After this, we'll create a document-term matrix, which will allow us to see which words occur most frequently across all three sources. We don't want to remove any common words (e.g., "and") at this point because they'll be needed as both inputs and outputs of the predictive model.
+#### Word Frequency
+Given the clutter described above, we first do some general cleaning before analyzing further. We don't want to affect any relationships between the words, so we focus on converting to lowercase, removing punctuation and numbers, and stripping extra spaces. We'll also take this opportunity to remove profanity. After this, we'll create a document-term matrix, which will allow us to see which words occur most frequently across all three sources. We will also remove any common words (e.g., "and") for this analysis, but we'll leave them in when we build our model since those frequently are the correct words to predict. Finally, we are using 10,000 lines from each of the sources in the corpus which let's us infer word frequency and relationships while reducing computational time.
 
 ```{r preprocess, echo=F, message=F, warning=F}
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+corpus <- Corpus(DirSource("corpus/final/en_US"))
 curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
 
 # DigitalOcean droplet can't handle multiple cores for some reason
@@ -129,7 +146,7 @@ corpus <- tm_map(corpus, stripWhitespace)
 corpus <- tm_map(corpus, removeWords, as.matrix(curseDict))
 corpus <- tm_map(corpus, removeWords, stopwords("english"))
 
-dtm <- DocumentTermMatrix(corpus, control = list(minWordLength = 1))
+dtm <- DocumentTermMatrix(corpus, control = list(minWordLength = 2))
 stopCluster(cl)
 
 # Word count per document
@@ -137,17 +154,13 @@ rowSums(as.matrix(dtm))
 
 ```
 
-Word count comparison post clean
+The 20 most-frequent words across all sources are: `r `
 
-Boxplot or histogram comparing line lengths in words
+We can also look at the most frequently occurring word pairs, the top 20 of which are: `r `
 
-Frequency comparison
 
-Frequency combined
 
-Word pair frequencies
-
-```{r wordcloud, message=F, warning=F}
+```{r wordcloud, echo=F, message=F, warning=F}
 # For the wordcloud, we'll remove the common words
 corpusCloud <- tm_map(corpus, removeWords, stopwords)
 dtmCloud <- DocumentTermMatrix(corpusCloud)

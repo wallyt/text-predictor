@@ -44,3 +44,52 @@ dfm <- dfm(newCorpus, stopwords=TRUE)
 topfeatures(mydfm, 20)  # 20 top words
 quartz()
 plot(mydfm) # word cloud
+
+
+### From the building of the main doc:
+```{r preprocess, echo=F, message=F, warning=F}
+# From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+corpus <- Corpus(DirSource("corpus/final/en_US"))
+curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
+
+# DigitalOcean droplet can't handle multiple cores for some reason
+coreLim <- ifelse(grepl("linux", R.version$platform), ", mc.cores=1", "")
+
+ensurePkg("doParallel")
+corecount <- detectCores()
+cl <- makeCluster(corecount * 0.75)
+registerDoParallel(cl)
+getDoParWorkers()
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, stripWhitespace)
+corpus <- tm_map(corpus, removeWords, as.matrix(curseDict))
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+dtm <- DocumentTermMatrix(corpus, control = list(minWordLength = 1))
+stopCluster(cl)
+
+# Word count per document
+rowSums(as.matrix(dtm))
+
+```
+
+```{r wordcloud, echo=F, message=F, warning=F}
+# For the wordcloud, we'll remove the common words
+corpusCloud <- tm_map(corpus, removeWords, stopwords)
+dtmCloud <- DocumentTermMatrix(corpusCloud)
+# Convert to a normal matrix from the sparse matrix
+dtmCloud2 <- as.matrix(dtmCloud)
+# Column sums of the matrix to get a named vector
+frequency <- colSums(dtmCloud2)
+frequency <- sort(frequency, decreasing=TRUE)
+
+# Plot a word cloud with top 100
+words <- names(frequency)
+wordcloud(words[1:200], frequency[1:200], colors=brewer.pal(6, "Dark2"))
+
+# Find associations of words occurring at least 200 times
+dtmCloudHighFreq <- findFreqTerms(dtmCloud, 200, Inf)
+findAssocs(dtmCloud, "love", 0.85)
+```
