@@ -35,6 +35,7 @@ dtmHighFreq <- findFreqTerms(dtm, 200, Inf)
 findAssocs(dtm, "another", 0.85)
 ```
 
+one option is to use stemDocument and then stemComplete (using dictCorpus<-myCorpus; dictionary=dictCorpus) to make them readable
 
 # Try different method
 # https://github.com/kbenoit/quanteda
