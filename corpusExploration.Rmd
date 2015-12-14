@@ -2,10 +2,14 @@
 title: "Corpus Exploration"
 author: "Wally Thornton"
 date: "December 15, 2015"
-output: html_document
+output: pdf_document
 ---
 ## Executive Summary
+The ultimate goal of this project is to create a Shiny web app that predicts the next word you will need as you type, much like the predictive text that the SwiftKey apps feature. Such apps need to be trained, which is done by analyzing text documents created by millions of regular people. A collection of these training documents is called a corpus, and we look at the word sequences in a corpus to build a predictive model. For example, if "today" is usually the word that follows "it will rain" in the corpus, we can predict that a user of our app will want "today" if they type "it will rain" in the app. The best text predictors, like SwiftKey's, continue to learn as you use it, since you may have typing tendencies that differ from those in the corpus.
 
+Before we build a predictive model, we first need to analyze the text in the corpus to get a sense of what we're dealing with. We want to answer questions like, "How many lines of text do we have? How long is each line? Does the length differ depending on what the source is? How much will we need to clean up the text to be able to use it in our modeling?" After this analysis, we'll process the text and then build and test our models.
+
+This paper covers the efforts of that initial exploratory text analysis. The corpus provided was built with lines of random, anonymized news, blogs and tweets from the U.S. We'll find below that the sources vary greatly in length and need for processing, and the paper then ends with our plan for creating a prediction algorithm and Shiny app. (In the interest of keeping the paper concise, all code is in the Appendix.)
 ```{r setup, include=F}
 knitr::opts_chunk$set(fig.width=7, fig.align='center')
 options(scipen=999)
@@ -62,7 +66,7 @@ g <- ggplot(plot.data, aes(x = Source, y = Length, fill = Source))
 g + geom_boxplot()
 ```
 
-Now let's look at the word counts per line per text source, using the raw, un-processed data:
+Now let's look at the word counts per line per text source:
 ```{r wordCountsPre, echo=F, message=F, warning=F}
 newsWordsPre <- stri_count(USnews, regex="\\S+")
 blogsWordsPre <- stri_count(USblogs, regex="\\S+")
