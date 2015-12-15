@@ -13,7 +13,8 @@ Before we build a predictive model, we first need to analyze the text in the cor
 
 This paper covers the efforts of that initial exploratory text analysis. The corpus provided was built with lines of random, anonymized news, blogs and tweets from the U.S. We'll find below that the sources vary greatly in length and need for processing, and the paper then ends with our plan for creating a prediction algorithm and Shiny app. (In the interest of keeping the paper concise, all code is in the Appendix.)
 ```{r setup, include=F}
-setwd("~/Documents/DataScience/Capstone")
+local <- FALSE
+ifelse(local, setwd("~/Documents/DataScience/Capstone"), setwd("./r-projects/Capstone"))
 knitr::opts_chunk$set(fig.width=6, fig.align='center')
 str_break = function(x, width = 80L) {
   n = nchar(x)
