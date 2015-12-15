@@ -183,7 +183,7 @@ It's often just as useful to look at the least-frequent words as it is the most.
 
 Finally, just for fun, we plot a wordcloud of the 200 most-frequently appearing words in our 30,000-line sample:
 ```{r wordcloud, fig.width=6, echo=F, message=F, warning=F}
-# Plot a word cloud with top 100
+# Plot a word cloud with top 200
 words <- names(freq2)
 wordcloud(words[1:200], freq2[1:200], colors=brewer.pal(6, "Dark2"))
 ```
