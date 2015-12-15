@@ -41,7 +41,6 @@ ensurePkg("stringi")
 
 ## Exploratory Data Analysis
 ```{r dataLoad, echo=F, message=F, warning=F}
-#USnewsExcerpt <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE, n=10000)
 USnews <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE)
 USblogs <- readLines("corpus/final/en_US/en_US.blogs.txt", skipNul = TRUE)
 UStweets <- readLines("corpus/final/en_US/en_US.twitter.txt", skipNul = TRUE)
