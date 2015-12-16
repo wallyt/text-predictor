@@ -7,13 +7,13 @@ output:
     latex_engine: xelatex
 ---
 ## Executive Summary
-The ultimate goal of this project is to create a Shiny web app that predicts the next word you will need as you type, much like the predictive text that the SwiftKey apps feature. Such apps need to be trained, which is done by analyzing text documents created by millions of regular people. A collection of these training documents is called a corpus, and we look at the word sequences in a corpus to build a predictive model. For example, if "today" is usually the word that follows "it will rain" in the corpus, we can predict that a user of our app will want "today" if they type "it will rain" in the app. The best text predictors, like SwiftKey's, continue to learn as you use it, since you may have typing tendencies that differ from those in the corpus.
+The ultimate goal of this project is to create a Shiny web app that predicts the next word you will need as you type, much like the predictive text that the SwiftKey apps feature. Such apps need to be trained, which is done by analyzing documents of real-world text. A collection of these training documents is called a corpus, and we look at the word sequences in a corpus to build a predictive model. For example, if "today" is usually the word that follows "it will rain" in the corpus, we can predict that a user of our app will want "today" if they type "it will rain" in the app. The best text predictors, like SwiftKey's, continue to learn as you use it, since you may have typing tendencies that differ from those in the corpus.
 
 Before we build a predictive model, we first need to analyze the text in the corpus to get a sense of what we're dealing with. We want to answer questions like, "How many lines of text do we have? How long is each line? Does the length differ depending on what the source is? How much will we need to clean up the text to be able to use it in our modeling?" After this analysis, we'll process the text and then build and test our models.
 
 This paper covers the efforts of that initial exploratory text analysis. The corpus provided was built with lines of random, anonymized news, blogs and tweets from the U.S. We'll find below that the sources vary greatly in length and need for processing, and the paper then ends with our plan for creating a prediction algorithm and Shiny app. (In the interest of keeping the paper concise, all code is in the Appendix.)
 ```{r setup, include=F}
-local <- FALSE
+local <- TRUE
 ifelse(local, setwd("~/Documents/DataScience/Capstone"), setwd("./r-projects/Capstone"))
 knitr::opts_chunk$set(fig.width=6, fig.align='center')
 str_break = function(x, width = 80L) {
@@ -38,6 +38,7 @@ ensurePkg("ggplot2")
 ensurePkg("scales")
 ensurePkg("wordcloud")
 ensurePkg("stringi")
+ensurePkg("slam")
 ```
 
 ## Exploratory Data Analysis
@@ -62,7 +63,7 @@ News | `r comma(round(newsSum[1], 1))` | `r comma(round(newsSum[3], 1))` | `r co
 Blogs | `r comma(round(blogsSum[1], 1))` | `r comma(round(blogsSum[3], 1))` | `r comma(round(blogsSum[4], 1))` | `r comma(round(blogsSum[6], 1))`
 Tweets | `r comma(round(tweetsSum[1], 1))` | `r comma(round(tweetsSum[3], 1))` | `r comma(round(tweetsSum[4], 1))` | `r comma(round(tweetsSum[6], 1))`
 
-Not surprisingly, the length of the blog and news items are much longer than the tweets (two to three times as long, on average) and the longest tweets are only 140 characters, versus the tens of thousands of characters in the longest blog and news excerpts. This is evident in the violin plot below, which shows the log of the lengths of the sources on the y-axis and the distribution of the lengths illustrated by their shapes. (Given the huge range of line lengths, this plot is of the log of the lengths to help in visualizing the spreads.) 
+Not surprisingly, the length of the blog and news items are much longer than the tweets (three to four times as long, on average) and the longest tweets are only 140 characters, versus the tens of thousands of characters in the longest blog and news excerpts. This is evident in the violin plot below, which shows the log of the lengths of the sources on the y-axis and the distribution of the lengths illustrated by their shapes. (Given the huge range of line lengths, this plot is of the log of the lengths to help in visualizing the spreads.) 
 
 ```{r charViolin, echo=F, message=F, warning=F}
 a <- data.frame(Source = "News", Length = log(newsChars))
@@ -76,7 +77,7 @@ g + geom_violin()
 Note how much more varied blogs and news item lengths are than tweet lengths, which cluster close to their maximum of 140. Also, the blog lines have much greater variance in length than news items.
 
 ### Words
-Now let's look at the word counts per line per text source:
+Now let's look at the word counts per line per raw, unprocessed text source:
 ```{r wordCounts, echo=F, message=F, warning=F}
 newsWordsPre <- stri_count(USnews, regex="\\S+")
 blogsWordsPre <- stri_count(USblogs, regex="\\S+")
@@ -94,7 +95,7 @@ Tweets | `r comma(round(tweetsWordsSum[1], 1))` | `r comma(round(tweetsWordsSum[
 
 These words counts will be different after processing the data (e.g., removing profanities), but the counts above help us see again how much longer the news items are than tweets, and how blog excerpts are even longer. (Interesting trivia: the tweet with the most words in the corpus is the word 'hi' repeated 47 times. Not very useful for our analysis, but perhaps indicative of the overall usefulness of tweets for training a model.)
 
-The histogram below shows the distribution of word counts between the three sources. (The plot is truncated at a count of 100 to help compare word count distributions since the word counts are clustered at the lower end of the scale.)
+The histogram below shows the distribution of word counts per line between the three sources. (The plot is truncated at a count of 100 to help compare word count distributions since the word counts are clustered at the lower end of the scale.)
 
 ```{r wordHist, echo=F, message=F, warning=F}
 a <- data.frame(Source = "News", Count = newsWordsPre)
@@ -108,7 +109,7 @@ g + geom_histogram(data = subset(plot.data, Source == "Tweets"), alpha = 0.3, bi
     geom_histogram(data = subset(plot.data, Source == "News"), alpha = 0.3, binwidth = 1)
 ```
 
-As in the comparison of characters, the number of words per tweet is on average much lower than in news and blogs, with the vast majority of tweets consisting of fewer than 25 words. The number of words per blog and news item is much more varied, with both having a long tail of excerpts with hundreds, even thousands of words, as seen in the table above.
+The number of words per tweet is on average much lower than in news and blogs, with the vast majority of tweets consisting of fewer than 25 words. Blog and news item per-line word counts are much more varied, with both having long tails with hundreds and thousands of words per line.
 
 ### Textual Analysis
 Next we want to get a sense of the data itself. How clean is the text? How many extraneous words, numbers, emoji and punctuation marks will we have to take care of? Starting with news and picking five at random:
@@ -118,7 +119,7 @@ set.seed(42)
 print(lapply(USnews[sample(length(USnews),5)], str_break), quote = F)
 ```
 
-We see in these five examples that the news items are typically full sentences, although not exclusively. Items vary from sports reports to local news to entertainment. Accordingly, there are many proper nouns ('Chicago', 'Coolio'), numbers ('9-9 with a 3.75', '1995'), topic-specific items ('ERA') and even email addresses that will not be useful in our predictive text app. On the plus side, the text tends to adhere to standard grammatical rules and will therefore be relatively easy to parse.
+We see in these five examples that the news items are typically full sentences, although not exclusively. Items vary from sports reports to local news to entertainment. Accordingly, there are many proper nouns ('Chicago', 'Coolio'), numbers ('9-9 with a 3.75', '1995'), topic-specific items ('ERA') and even email addresses that will not be useful in our predictive text app. On the plus side, the text tends to adhere to standard grammatical rules and will therefore be relatively easy to parse and useful for our modeling.
 
 ```{r blogsSample, echo=F, message=F, warning=F, tidy=T}
 set.seed(42)
@@ -132,19 +133,19 @@ set.seed(42)
 print(lapply(UStweets[sample(length(UStweets),5)], str_break), quote = F)
 ```
 
-If the news items are the most structured and parseable and blog excerpts slightly less so, the tweets reside at the opposite end of the spectrum with incomplete sentences, grammatical errors, misspellings (intentional and otherwise), abbreviations, and inscrutable references. Punctuation is used liberally, but not to standard, complicating the relationships between terms.
+If the news items are the most structured and parseable and blog excerpts slightly less so, the tweets reside at the opposite end of the spectrum with incomplete sentences, grammatical errors, misspellings (intentional and otherwise), abbreviations, and inscrutable references. Punctuation is used liberally, but not to standard, complicating the relationships between terms. The tweets will have less usefulness in building our predictive models.
 
 ### Word Frequency
-Given the clutter described above, we first do some general cleaning before analyzing further. We don't want to affect any relationships between the words, so we focus on converting to lowercase, removing punctuation and numbers, and stripping extra spaces. We'll also take this opportunity to remove profanity. After this, we'll create a document-term matrix, which will allow us to see which words occur most frequently across all three sources. We will also analyze with and without common words (e.g., "and") for this analysis, but we'll leave them in when we build our model since those frequently are the correct words to predict. Finally, we are using 10,000 lines from each of the sources in the corpus which let's us infer word frequency and relationships while reducing computational time.
+Given the clutter described above, we first do some general cleaning before analyzing further. We don't want to affect any relationships between the words, so we focus on converting to lowercase, removing punctuation and numbers, and stripping extra spaces. We'll also take this opportunity to remove profanity. After this, we'll create a document-term matrix, which will allow us to see which words occur most frequently across all three sources. We will also analyze with and without common words (e.g., "and") for this analysis, but we'll leave them in when we build our model since those frequently are the correct words to predict. Finally, we are using 20,000 lines from each of the sources in the corpus which let's us infer word frequency and relationships while reducing computational time.
 
 ```{r preprocess, echo=F, message=F, warning=F}
-# Take random 10,000-line samples from each source and then combine into a corpus
+# Take random 20,000-line samples from each source and then combine into a corpus
 set.seed(42)
-n <- USnews[sample(length(USnews), 10000)]
+n <- USnews[sample(length(USnews), 20000)]
 set.seed(42)
-b <- USblogs[sample(length(USblogs), 10000)]
+b <- USblogs[sample(length(USblogs), 20000)]
 set.seed(42)
-t <- UStweets[sample(length(UStweets), 10000)]
+t <- UStweets[sample(length(UStweets), 20000)]
 corpus <- Corpus(VectorSource(c(n,b,t)))
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
 curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
@@ -166,8 +167,9 @@ corpus2 <- tm_map(corpus, removeWords, stopwords("english"))
 dtm2 <- DocumentTermMatrix(corpus2, control = list(wordLengths = c(4, Inf)))
 
 # Convert to a normal matrix from the sparse matrix
-freq <- colSums(as.matrix(dtm))
-freq2 <- colSums(as.matrix(dtm2))
+# Package 'slam' needed for larger dtm's
+freq <- slam::col_sums(dtm, na.rm = T)
+freq2 <- slam::col_sums(dtm2, na.rm = T)
 # Column sums of the matrix to get a named vector
 freq <- sort(freq, decreasing=TRUE)
 freq2 <- sort(freq2, decreasing=TRUE)
@@ -175,13 +177,13 @@ freq2 <- sort(freq2, decreasing=TRUE)
 stopCluster(cl)
 ```
 
-The 10 most-frequent words across all sources are: `r names(freq[1:10])`
+After doing the above, we find the 10 most-frequent words across all sources to be: `r names(freq[1:10])`
 
 If we strip out common words (e.g., "the", "can"), the 10 most-frequent words are: `r names(freq2[1:10])`
 
 It's often just as useful to look at the least-frequent words as it is the most. In this case, we find at the bottom some Chinese characters that will have to be removed before building our model: `r names(freq2[length(freq2)-4])`.
 
-Finally, just for fun, we plot a wordcloud of the 200 most-frequently appearing words in our 30,000-line sample:
+Finally, just for fun, we plot a wordcloud of the 200 most-frequently appearing words in our 60,000-line sample:
 ```{r wordcloud, fig.width=6, echo=F, message=F, warning=F}
 # Plot a word cloud with top 200
 words <- names(freq2)
@@ -191,9 +193,9 @@ wordcloud(words[1:200], freq2[1:200], colors=brewer.pal(6, "Dark2"))
 ## Next Steps
 Even with the pre-processing of the text performed above, we saw that further cleaning will be necessary before trying to build an algorithm. The next steps will be: 
 
-1. Remove foreign characters and words, as well as fixing the contractions that are now incorrect because of punctuation removal.
-2. Experiment with stemming (the reduction of words to their roots), although this is crude, even if words are then completed. Another problem with stemming is that the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, 'operative' and 'operational' are not interchangeable, despite their shared root of 'oper.'
-3. More likely, lemmatization will be used, since it takes grammatical context into account.
+1. Remove foreign characters and words, as well as fixing the contractions that are now incorrect because of punctuation removal. This includes hashtags, email addresses and '@' names.
+2. I won't use stemming (the reduction of words to their roots) because the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, 'operative' and 'operational' are not interchangeable, despite their shared root of 'oper.'
+3. I will experiment with lemmatization, which is similar to stemming but takes grammatical context into account.
 4. More.
 
 \pagebreak
