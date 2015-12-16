@@ -150,12 +150,6 @@ corpus <- Corpus(VectorSource(c(n,b,t)))
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
 curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
 
-ensurePkg("doParallel")
-corecount <- detectCores()
-cl <- makeCluster(corecount * 0.75)
-registerDoParallel(cl)
-# getDoParWorkers()
-
 corpus <- tm_map(corpus, content_transformer(tolower))
 corpus <- tm_map(corpus, removePunctuation)
 corpus <- tm_map(corpus, removeNumbers)
@@ -173,8 +167,6 @@ freq2 <- slam::col_sums(dtm2, na.rm = T)
 # Column sums of the matrix to get a named vector
 freq <- sort(freq, decreasing=TRUE)
 freq2 <- sort(freq2, decreasing=TRUE)
-
-stopCluster(cl)
 ```
 
 After doing the above, we find the 10 most-frequent words across all sources to be: `r names(freq[1:10])`

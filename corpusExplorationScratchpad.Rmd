@@ -41,7 +41,7 @@ one option is to use stemDocument and then stemComplete (using dictCorpus<-myCor
 # https://github.com/kbenoit/quanteda
 ensurePkg('quanteda')
 newCorpus <- corpus(c(USnews, USblogs, UStweets))
-dfm <- dfm(newCorpus, stopwords=TRUE)
+dfm <- dfm(newCorpus)
 topfeatures(mydfm, 20)  # 20 top words
 quartz()
 plot(mydfm) # word cloud
@@ -56,11 +56,6 @@ curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
 # DigitalOcean droplet can't handle multiple cores for some reason
 coreLim <- ifelse(grepl("linux", R.version$platform), ", mc.cores=1", "")
 
-ensurePkg("doParallel")
-corecount <- detectCores()
-cl <- makeCluster(corecount * 0.75)
-registerDoParallel(cl)
-getDoParWorkers()
 corpus <- tm_map(corpus, content_transformer(tolower))
 corpus <- tm_map(corpus, removePunctuation)
 corpus <- tm_map(corpus, removeNumbers)
@@ -69,7 +64,6 @@ corpus <- tm_map(corpus, removeWords, as.matrix(curseDict))
 corpus <- tm_map(corpus, removeWords, stopwords("english"))
 
 dtm <- DocumentTermMatrix(corpus, control = list(minWordLength = 1))
-stopCluster(cl)
 
 # Word count per document
 rowSums(as.matrix(dtm))
