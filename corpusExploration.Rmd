@@ -173,7 +173,7 @@ After doing the above, we find the 10 most-frequent words across all sources to 
 
 If we strip out common words (e.g., "the", "can"), the 10 most-frequent words are: `r names(freq2[1:10])`
 
-It's often just as useful to look at the least-frequent words as it is the most. In this case, we find at the bottom some Chinese characters that will have to be removed before building our model: `r names(freq2[length(freq2)-4])`.
+It's often just as useful to look at the least-frequent words as it is the most. In this case, we find at the bottom some Chinese characters that will have to be removed before building our model. `r names(freq2[length(freq2)-4])`
 
 Finally, just for fun, we plot a wordcloud of the 200 most-frequently appearing words in our 60,000-line sample:
 ```{r wordcloud, fig.width=6, echo=F, message=F, warning=F}
@@ -185,10 +185,12 @@ wordcloud(words[1:200], freq2[1:200], colors=brewer.pal(6, "Dark2"))
 ## Next Steps
 Even with the pre-processing of the text performed above, we saw that further cleaning will be necessary before trying to build an algorithm. The next steps will be: 
 
-1. Remove foreign characters and words, as well as fixing the contractions that are now incorrect because of punctuation removal. This includes hashtags, email addresses and '@' names.
+1. Remove foreign characters and words, as well as fixing the contractions that are now incorrect because of punctuation removal. This includes hashtags, email addresses and '@' names. Maintain the structure of the lines so that context is retained.
 2. I won't use stemming (the reduction of words to their roots) because the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, 'operative' and 'operational' are not interchangeable, despite their shared root of 'oper.'
-3. I will experiment with lemmatization, which is similar to stemming but takes grammatical context into account.
-4. More.
+3. Experiment with lemmatization, which is similar to stemming but takes grammatical context into account.
+4. Construct n-gram models using one, two and three words, using Markov chains. The models will implement zero generalization to handle word combinations that weren't in the training corpus, such as with backoff models or smoothing. At this stage I will measure the accuracy and performance of the model using 
+5. Refactor the model and code to ensure it's as efficient as possible.
+6. Build a Shiny app that uses the model to predict the next word you need as you type.
 
 \pagebreak
 
