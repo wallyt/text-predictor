@@ -15,7 +15,7 @@ This paper covers the efforts of that initial exploratory text analysis. The cor
 ```{r setup, include=F}
 local <- TRUE
 ifelse(local, setwd("~/Documents/DataScience/Capstone"), setwd("./r-projects/Capstone"))
-knitr::opts_chunk$set(fig.width=6, fig.align='center')
+knitr::opts_chunk$set(fig.width=6, fig.height=4, fig.align='center')
 str_break = function(x, width = 80L) {
   n = nchar(x)
   if (n <= width) return(x)
@@ -115,22 +115,19 @@ The number of words per tweet is on average much lower than in news and blogs, w
 Next we want to get a sense of the data itself. How clean is the text? How many extraneous words, numbers, emoji and punctuation marks will we have to take care of? Starting with news and picking five at random:
 
 ```{r newsSample, echo=F, message=F, warning=F, tidy=T}
-set.seed(42)
-print(lapply(USnews[sample(length(USnews),5)], str_break), quote = F)
+set.seed(42); print(lapply(USnews[sample(length(USnews),5)], str_break), quote = F)
 ```
 
 We see in these five examples that the news items are typically full sentences, although not exclusively. Items vary from sports reports to local news to entertainment. Accordingly, there are many proper nouns ('Chicago', 'Coolio'), numbers ('9-9 with a 3.75', '1995'), topic-specific items ('ERA') and even email addresses that will not be useful in our predictive text app. On the plus side, the text tends to adhere to standard grammatical rules and will therefore be relatively easy to parse and useful for our modeling.
 
 ```{r blogsSample, echo=F, message=F, warning=F, tidy=T}
-set.seed(42)
-print(lapply(USblogs[sample(length(USblogs),5)], str_break), quote = F)
+set.seed(42); print(lapply(USblogs[sample(length(USblogs),5)], str_break), quote = F)
 ```
 
 The five blog examples are much less structured than the news items, with grammatical errors, misspellings and incomplete sentences. Topics are all over the place and there is a lack of comment delineators. Punctuation is also much more liberally used ('\*hug!!!!!!\*').
 
 ```{r tweetsSample, echo=F, message=F, warning=F, tidy=T}
-set.seed(42)
-print(lapply(UStweets[sample(length(UStweets),5)], str_break), quote = F)
+set.seed(42); print(lapply(UStweets[sample(length(UStweets),5)], str_break), quote = F)
 ```
 
 If the news items are the most structured and parseable and blog excerpts slightly less so, the tweets reside at the opposite end of the spectrum with incomplete sentences, grammatical errors, misspellings (intentional and otherwise), abbreviations, and inscrutable references. Punctuation is used liberally, but not to standard, complicating the relationships between terms. The tweets will have less usefulness in building our predictive models.
@@ -140,12 +137,9 @@ Given the clutter described above, we first do some general cleaning before anal
 
 ```{r preprocess, echo=F, message=F, warning=F}
 # Take random 20,000-line samples from each source and then combine into a corpus
-set.seed(42)
-n <- USnews[sample(length(USnews), 20000)]
-set.seed(42)
-b <- USblogs[sample(length(USblogs), 20000)]
-set.seed(42)
-t <- UStweets[sample(length(UStweets), 20000)]
+set.seed(42); n <- USnews[sample(length(USnews), 20000)]
+set.seed(42); b <- USblogs[sample(length(USblogs), 20000)]
+set.seed(42); t <- UStweets[sample(length(UStweets), 20000)]
 corpus <- Corpus(VectorSource(c(n,b,t)))
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
 curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
@@ -169,17 +163,17 @@ freq <- sort(freq, decreasing=TRUE)
 freq2 <- sort(freq2, decreasing=TRUE)
 ```
 
-After doing the above, we find the 10 most-frequent words across all sources to be: `r names(freq[1:10])`
+After doing the above, we find the 10 most-frequent words across all sources to be: *`r names(freq[1:10])`*.
 
-If we strip out common words (e.g., "the", "can"), the 10 most-frequent words are: `r names(freq2[1:10])`
+If we strip out common words (e.g., "the", "and"), the 10 most-frequent words are: *`r names(freq2[1:10])`*.
 
 It's often just as useful to look at the least-frequent words as it is the most. In this case, we find at the bottom some Chinese characters that will have to be removed before building our model. `r names(freq2[length(freq2)-4])`
 
 Finally, just for fun, we plot a wordcloud of the 200 most-frequently appearing words in our 60,000-line sample:
-```{r wordcloud, fig.width=6, echo=F, message=F, warning=F}
+```{r wordcloud, fig.width=6, fig.height=6, echo=F, message=F, warning=F}
 # Plot a word cloud with top 200
 words <- names(freq2)
-wordcloud(words[1:200], freq2[1:200], colors=brewer.pal(6, "Dark2"))
+wordcloud(words[1:200], freq2[1:200], colors=brewer.pal(6, "Dark2"), rot.per = 0.25, scale = c(3,.25))
 ```
 
 ## Next Steps
@@ -188,9 +182,9 @@ Even with the pre-processing of the text performed above, we saw that further cl
 1. Remove foreign characters and words, as well as fixing the contractions that are now incorrect because of punctuation removal. This includes hashtags, email addresses and '@' names. Maintain the structure of the lines so that context is retained.
 2. I won't use stemming (the reduction of words to their roots) because the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, 'operative' and 'operational' are not interchangeable, despite their shared root of 'oper.'
 3. Experiment with lemmatization, which is similar to stemming but takes grammatical context into account.
-4. Construct n-gram models using one, two and three words, using Markov chains. The models will implement zero generalization to handle word combinations that weren't in the training corpus, such as with backoff models or smoothing. At this stage I will measure the accuracy and performance of the model using 
-5. Refactor the model and code to ensure it's as efficient as possible.
-6. Build a Shiny app that uses the model to predict the next word you need as you type.
+4. Construct predictive models that look at the last one, two and three words you typed (using Markov chains for one-, two- and three-gram models). To handle word combinations that weren't in the training corpus, the models will implement Kneser-Way smoothing, as well as backoff models.
+5. Refactor the model and code to ensure it's as efficient as possible, measuring the accuracy (using perplexity as the metric) and finding the right balance of performance, runtime and size.
+6. Build a Shiny web app that uses the model to predict the next word you need as you type.
 
 \pagebreak
 
