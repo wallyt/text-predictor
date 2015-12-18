@@ -28,4 +28,4 @@ UStweets <- readLines("corpus/final/en_US/en_US.twitter.txt", skipNul = TRUE)
 # Combine into corpus
 corpus <- corpus(c(USnews, USblogs, UStweets))
 dfm <- dfm(corpus, concatenator = " ", verbose = F, ngrams = 1:3)
-topfeatures(mydfm, 20)  # 20 top words
+topfeatures(dfm, 20)  # 20 top words
