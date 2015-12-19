@@ -2,8 +2,9 @@
 title: "Corpus Exploration"
 author: "Wally Thornton"
 date: "December 15, 2015"
-output: 
-  pdf_document: 
+output:
+  html_document: default
+  pdf_document:
     latex_engine: xelatex
 ---
 ## Executive Summary
@@ -167,7 +168,7 @@ After doing the above, we find the 10 most-frequent words across all sources to 
 
 If we strip out common words (e.g., "the", "and"), the 10 most-frequent words are: *`r names(freq2[1:10])`*.
 
-It's often just as useful to look at the least-frequent words as it is the most. In this case, we find at the bottom some Chinese characters that will have to be removed before building our model. `r names(freq2[length(freq2)-4])`
+It's often just as useful to look at the least-frequent words as it is the most. In this case, we find at the bottom some Chinese characters that will have to be removed before building our model: `r names(freq2[length(freq2)-4])`.
 
 Finally, just for fun, we plot a wordcloud of the 200 most-frequently appearing words in our 60,000-line sample:
 ```{r wordcloud, fig.width=6, fig.height=6, echo=F, message=F, warning=F}
