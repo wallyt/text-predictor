@@ -26,7 +26,7 @@ UStweets <- readLines("corpus/final/en_US/en_US.twitter.txt", skipNul = TRUE)
 baseClean <- function(text) {
     new <- gsub(" @[a-zA-z]+| #[a-zA-z]+", "", text)
     new <- gsub("[[:digit:]]+", "", new)
-    new <- gsub("[[:punct:]^']+", "", new)
+    new <- gsub("(?!')[[:punct:]]+", "", new, perl = T)
     return(new)
 }
 UStweets <- baseClean(UStweets)
@@ -44,9 +44,10 @@ corpus <- corpus(c(n,b,t))
 
 #tolower, strip whitespace and de-profane
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
-curseDict <- read.csv("profanities.csv", stringsAsFactor=F)
+curseDict <- as.character(read.csv("profanities.csv", stringsAsFactor=F))
+corpus <- removeFeatures(corpus, curseDict)
 
-dfm1 <- dfm(corpus, concatenator = " ", verbose = F, ngrams = 1)
+dfm1 <- dfm(corpus, toLower = T, removePunct = F, removeTwitter = T, stem = F)
 dfm2 <- dfm(corpus, concatenator = " ", verbose = F, ngrams = 2)
 dfm3 <- dfm(corpus, concatenator = " ", verbose = F, ngrams = 3)
 topfeatures(dfm, 200)  # 20 top words
