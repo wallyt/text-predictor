@@ -62,8 +62,12 @@ set.seed(42); b <- USblogs[sample(length(USblogs), 10000)]
 set.seed(42); t <- UStweets[sample(length(UStweets), 10000)]
 corpus <- corpus(c(n,b,t))
 
+# Full corpus
+#corpus <- corpus(c(USnews, USblogs, UStweets))
+
+
 # Keywords in context, 3 words of context
-kwic(corpus, "love", 3)
+#kwic(corpus, "love", 3)
 
 dfm1 <- dfm(corpus, toLower = T, removePunct = F, removeTwitter = T, stem = F)
 dfm2 <- dfm(corpus, toLower = T, removePunct = F, removeTwitter = T, stem = F, concatenator = " ", ngrams = 2)
