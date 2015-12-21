@@ -36,8 +36,9 @@ USblogs <- baseClean(USblogs)
 USnews <- baseClean(USnews)
 
 # To detect double words, with Perl=T: "\\b(\\S+?)\\1\\S*\\b" and then insert with \1
+## TODO: MAKE THE DOUBLE CHECKER WORK
 
-## TODO: MAKE PROFANITY FILTER WORK
+## TODO: MAKE PROFANITY FILTER WORK (try the textfile() function in quanteda
 # Remove profanity
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
 curseDict <- read.csv("profanities.csv", stringsAsFactor=F, quote = "")
@@ -73,6 +74,15 @@ topfeatures(dfm3, 20)  # 20 top words
 # Another way to look at it is collocations (bigrams, trigrams)
 colos <- collocations(corpus, method="all")
 
+## TODO: EXPORT DFMs AS DATA FRAMES
+df1 <- topfeatures(dfm1, dim(dfm1)[2])
+df2 <- topfeatures(dfm2, dim(dfm2)[2])
+df3 <- topfeatures(dfm3, dim(dfm3)[2])
+df4 <- topfeatures(dfm4, dim(dfm4)[2])
+df1 <- data.frame(word=names(df1), freq=df1, row.names = NULL)
+df2 <- data.frame(word=names(df2), freq=df2, row.names = NULL)
+df3 <- data.frame(word=names(df3), freq=df3, row.names = NULL)
+df4 <- data.frame(word=names(df4), freq=df4, row.names = NULL)
 
 ############## Build models
 
