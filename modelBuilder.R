@@ -16,6 +16,7 @@ ensurePkg <- function(x) {
 # ensurePkg("stringi")
 # ensurePkg("slam")
 ensurePkg("quanteda")
+ensurePkg("data.table")
 
 USnews <- readLines("corpus/final/en_US/en_US.news.txt", skipNul = TRUE)
 USblogs <- readLines("corpus/final/en_US/en_US.blogs.txt", skipNul = TRUE)
@@ -29,6 +30,7 @@ baseClean <- function(text) {
     # Employing negative lookahead so apostrophes not subbed; Perl needed to make it work right
     new <- gsub("(?!')[[:punct:]]+", "", new, perl = T)
     new <- gsub("\\s\\s", " ", new)
+    new <- gsub("[^[:print:]]", "", new)
     return(new)
 }
 UStweets <- baseClean(UStweets)
