@@ -90,4 +90,4 @@ df4 <- data.frame(word=names(df4), freq=df4, row.names = NULL)
 
 ############## Build models
 
-
+input <- "it would mean the world"
