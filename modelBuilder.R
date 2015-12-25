@@ -58,10 +58,10 @@ USblogs <- profanityClean(USblogs)
 USnews <- profanityClean(USnews)
 
 ######### Combine into corpus and generate ngrams
-# Take random 10,000-line samples from each source and then combine into a corpus
-set.seed(42); n <- USnews[sample(length(USnews), 10000)]
-set.seed(42); b <- USblogs[sample(length(USblogs), 10000)]
-set.seed(42); t <- UStweets[sample(length(UStweets), 10000)]
+# Take random 20,000-line samples from each source and then combine into a corpus
+set.seed(42); n <- USnews[sample(length(USnews), 20000)]
+set.seed(42); b <- USblogs[sample(length(USblogs), 20000)]
+set.seed(42); t <- UStweets[sample(length(UStweets), 20000)]
 corpus <- corpus(c(n,b,t))
 
 # Full corpus
@@ -75,21 +75,36 @@ dfm1 <- dfm(corpus, toLower = T, removePunct = F, removeTwitter = T, stem = F)
 dfm2 <- dfm(corpus, toLower = T, removePunct = F, removeTwitter = T, stem = F, concatenator = " ", ngrams = 2)
 dfm3 <- dfm(corpus, toLower = T, removePunct = F, removeTwitter = T, stem = F, concatenator = " ", ngrams = 3)
 dfm4 <- dfm(corpus, toLower = T, removePunct = F, removeTwitter = T, stem = F, concatenator = " ", ngrams = 4)
-topfeatures(dfm3, 20)  # 20 top words
+topfeatures(dfm4, 20)  # 20 top words
+
+tf1 <- topfeatures(dfm1, dim(dfm1)[2])
+tf2 <- topfeatures(dfm2, dim(dfm2)[2])
+tf3 <- topfeatures(dfm3, dim(dfm3)[2])
+tf4 <- topfeatures(dfm4, dim(dfm4)[2])
 
 # Another way to look at it is collocations (bigrams, trigrams)
 colos <- collocations(corpus, method="all")
 
-## TODO: EXPORT DFMs AS DATA FRAMES
-df1 <- topfeatures(dfm1, dim(dfm1)[2])
-df2 <- topfeatures(dfm2, dim(dfm2)[2])
-df3 <- topfeatures(dfm3, dim(dfm3)[2])
-df4 <- topfeatures(dfm4, dim(dfm4)[2])
-df1 <- data.frame(word=names(df1), freq=df1, row.names = NULL)
-df2 <- data.frame(word=names(df2), freq=df2, row.names = NULL)
-df3 <- data.frame(word=names(df3), freq=df3, row.names = NULL)
-df4 <- data.frame(word=names(df4), freq=df4, row.names = NULL)
+## Export DFMs as data tables
+dt1 <- data.table(word=names(tf1), freq=tf1)
+dt2 <- data.table(word=names(tf2), freq=tf2)
+dt3 <- data.table(word=names(tf3), freq=tf3)
+dt4 <- data.table(word=names(tf4), freq=tf4)
 
 ############## Build models
 
 input <- "it would mean the world"
+input <- tokenize(input, ngrams = 1:3, concatenator = " ", simplify = T)
+l <- length(input)
+dt4[grep(input[l], word)]
+
+
+
+
+
+
+
+
+
+
+
