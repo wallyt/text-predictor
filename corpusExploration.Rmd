@@ -15,7 +15,7 @@ Before we build a predictive model, we first need to analyze the text in the cor
 This paper covers the efforts of that initial exploratory text analysis. The corpus provided was built with lines of random, anonymized news, blogs and tweets from the U.S. We'll analyze the data, do some preliminary cleaning, and end with our plan for creating a prediction algorithm and Shiny app. (In the interest of keeping the paper concise, all code is in the Appendix.)
 ```{r setup, include=F}
 local <- TRUE
-ifelse(local, setwd("~/Documents/DataScience/Capstone"), setwd("./r-projects/Capstone"))
+ifelse(local, setwd("~/Documents/DataScience/Johns Hopkins/Capstone"), setwd("./r-projects/Capstone"))
 knitr::opts_chunk$set(fig.width=6, fig.height=4, fig.align='center')
 str_break = function(x, width = 80L) {
   n = nchar(x)
@@ -181,11 +181,10 @@ wordcloud(words[1:200], freq2[1:200], colors=brewer.pal(6, "Dark2"), rot.per = 0
 Even with the pre-processing of the text performed above, we saw that further cleaning will be necessary before trying to build an algorithm. The next steps will be: 
 
 1. Remove foreign characters and words, as well as fixing the contractions that are now incorrect because of punctuation removal. This includes hashtags, email addresses and '@' names. Maintain the structure of the lines so that context is retained.
-2. I won't use stemming (the reduction of words to their roots) because the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, 'operative' and 'operational' are not interchangeable, despite their shared root of 'oper.'
-3. Experiment with lemmatization, which is similar to stemming but takes grammatical context into account.
-4. Construct predictive models that look at the last one, two and three words you typed (using Markov chains for one-, two- and three-gram models) stored in data tables. To handle word combinations that weren't in the training corpus, the models will implement Kneser-Way smoothing.
-5. Refactor the model and code to ensure it's as efficient as possible, measuring the accuracy (using perplexity as the metric) and finding the right balance of performance, runtime and size.
-6. Build a Shiny web app that uses the efficient model to predict the next word you need as you type.
+2. I won't use stemming or lemmatization (both involve the reduction of words to their roots) because the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, 'operative' and 'operational' are not interchangeable, despite their shared root of 'oper.'
+3. Construct predictive models that look at the last one, two and three words you typed (using Markov chains for one-, two- and three-gram models) stored in data tables. To handle word combinations that weren't in the training corpus, the models will implement Kneser-Way smoothing.
+4. Refactor the model and code to ensure it's as efficient as possible, measuring the accuracy (using perplexity as the metric) and finding the right balance of performance, runtime and size.
+5. Build a Shiny web app that uses the efficient model to predict the next word you need as you type.
 
 \pagebreak
 

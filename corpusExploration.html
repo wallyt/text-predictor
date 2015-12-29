@@ -244,8 +244,7 @@ img {
 <p>Even with the pre-processing of the text performed above, we saw that further cleaning will be necessary before trying to build an algorithm. The next steps will be:</p>
 <ol style="list-style-type: decimal">
 <li>Remove foreign characters and words, as well as fixing the contractions that are now incorrect because of punctuation removal. This includes hashtags, email addresses and ‘@’ names. Maintain the structure of the lines so that context is retained.</li>
-<li>I won’t use stemming (the reduction of words to their roots) because the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, ‘operative’ and ‘operational’ are not interchangeable, despite their shared root of ‘oper.’</li>
-<li>Experiment with lemmatization, which is similar to stemming but takes grammatical context into account.</li>
+<li>I won’t use stemming or lemmatization (both involve the reduction of words to their roots) because the ultimate goal is to predict the word you need as you type, so the full word makes all the difference. For example, ‘operative’ and ‘operational’ are not interchangeable, despite their shared root of ‘oper.’</li>
 <li>Construct predictive models that look at the last one, two and three words you typed (using Markov chains for one-, two- and three-gram models) stored in data tables. To handle word combinations that weren’t in the training corpus, the models will implement Kneser-Way smoothing.</li>
 <li>Refactor the model and code to ensure it’s as efficient as possible, measuring the accuracy (using perplexity as the metric) and finding the right balance of performance, runtime and size.</li>
 <li>Build a Shiny web app that uses the efficient model to predict the next word you need as you type.</li>
@@ -255,7 +254,7 @@ img {
 <div id="appendix" class="section level2">
 <h2>Appendix</h2>
 <pre class="r"><code>local &lt;- TRUE
-ifelse(local, setwd(&quot;~/Documents/DataScience/Capstone&quot;), setwd(&quot;./r-projects/Capstone&quot;))
+ifelse(local, setwd(&quot;~/Documents/DataScience/Johns Hopkins/Capstone&quot;), setwd(&quot;./r-projects/Capstone&quot;))
 knitr::opts_chunk$set(fig.width=6, fig.height=4, fig.align='center')
 str_break = function(x, width = 80L) {
   n = nchar(x)

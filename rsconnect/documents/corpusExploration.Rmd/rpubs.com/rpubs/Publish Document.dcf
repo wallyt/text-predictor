@@ -3,6 +3,5 @@ account: rpubs
 server: rpubs.com
 bundleId:
         https://api.rpubs.com/api/v1/document/138160/97edd3e6f0f04da6820c200cabe10d0e
-url:
-        http://rpubs.com/publish/claim/138160/8ca813bebe7e41718f4e3c4805054289
-when: 1451244042.53131
+url: http://rpubs.com/wallyt/138160
+when: 1451398066.80823
