@@ -2,7 +2,7 @@
 
 # Setup
 local <- TRUE
-ifelse(local, setwd("~/Documents/DataScience/Capstone"), setwd("./r-projects/Capstone")); rm(local)
+ifelse(local, setwd("~/Documents/DataScience/Johns Hopkins/Capstone"), setwd("./r-projects/Capstone")); rm(local)
 
 ensurePkg <- function(x) {
     if (!require(x,character.only = TRUE)) {
@@ -37,18 +37,15 @@ UStweets <- baseClean(UStweets)
 USblogs <- baseClean(USblogs)
 USnews <- baseClean(USnews)
 
-# To detect double words, with Perl=T: "\\b(\\S+?)\\1\\S*\\b" and then insert with \1
-## TODO: MAKE THE DOUBLE CHECKER WORK
-
-## TODO: MAKE PROFANITY FILTER WORK (try the textfile() function in quanteda
-# Remove profanity
+############ Remove profanity
 # From Shutterstock list at https://github.com/shutterstock/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
 curseDict <- read.csv("profanities.csv", stringsAsFactor=F, quote = "")
 curseDict <- as.vector(curseDict[,1])
 curseDict <- paste0(' ', curseDict, ' ')
 
 profanityClean <- function(text) {
-    for(i in length(curseDict)) {
+    for(i in 1:length(curseDict)) {
+        print(i)
         new <- gsub(curseDict[i], "", text)
     }
     return(new)
@@ -56,6 +53,9 @@ profanityClean <- function(text) {
 UStweets <- profanityClean(UStweets)
 USblogs <- profanityClean(USblogs)
 USnews <- profanityClean(USnews)
+
+## TODO: MAKE THE DOUBLE CHECKER WORK
+# To detect double words, with Perl=T: "\\b(\\S+?)\\1\\S*\\b" and then insert with \1
 
 ######### Combine into corpus and generate ngrams
 # Take random 20,000-line samples from each source and then combine into a corpus
@@ -66,7 +66,7 @@ USnews <- profanityClean(USnews)
 
 # Full corpus
 corpus <- corpus(c(USnews, USblogs, UStweets))
-
+rm(c(USnews, USblogs, UStweets))
 
 # Keywords in context, 3 words of context
 #kwic(corpus, "love", 3)
